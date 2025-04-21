@@ -7,7 +7,7 @@ from tqdm import tqdm
 from datetime import datetime
 from collections import defaultdict
 import concurrent.futures
-
+import time
 
 LINE_NOTIFY_TOKEN = 'boHMgzAvRReM6BADCyM3eodXmqkgrkrwlRD2P4Utf0b'
 LINE_NOTIFY_API = 'https://notify-api.line.me/api/notify'
@@ -96,6 +96,7 @@ def get_matched_stocks(stock_codes):
         for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), ncols=70):
             stock_code, stock_name, industry = futures[future]
             try:
+                time.sleep(0.1)  # 延遲 100 毫秒
                 match, recommendation_mean, recommendationKey, stock_name, industry = future.result()
                 if match:
                     count += 1
