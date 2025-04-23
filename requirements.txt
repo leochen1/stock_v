@@ -4,3 +4,5 @@ numpy
 yfinance
 tqdm
 lxml
+line-bot-sdk
+flask
