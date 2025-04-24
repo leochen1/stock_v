@@ -44,6 +44,8 @@ def get_stock_codes():
 
 def analyze_stock(stock_code, stock_name, industry):
     df = yf.Ticker(stock_code).history(period = 'max')
+    if df is None or df.empty:
+        return False, '-', '-', stock_name, industry
     df_info = yf.Ticker(stock_code).info
     recommendation_mean = df_info.get('recommendationMean', '-')  # 取得股票推薦值
     recommendationKey = df_info.get('recommendationKey', '-') # 取得股票投資建議
@@ -91,7 +93,7 @@ def analyze_stock(stock_code, stock_name, industry):
     # 檢查最後一個日期是否符合規則
     if not result_df.empty:
         last_row = result_df.iloc[-1]
-        if last_row['+DI_increase'] and last_row['-DI_decrease'] and last_row['ADX_increase'] and last_row['+DI_greater_than_-DI'] and last_row['Volume_1000'] > 100:
+        if last_row['ADX_increase'] and last_row['+DI_greater_than_-DI'] and last_row['Volume_1000'] > 100:
             return True, recommendation_mean, recommendationKey, stock_name, industry
         else:
             return False, recommendation_mean, recommendationKey, stock_name, industry
@@ -101,12 +103,12 @@ def analyze_stock(stock_code, stock_name, industry):
 def get_matched_stocks(stock_codes):
     matched_stocks = []
     count = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
         futures = {executor.submit(analyze_stock, stock_code, stock_name, industry): (stock_code, stock_name, industry) for stock_code, stock_name, industry in stock_codes}
         for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), ncols=70):
             stock_code, stock_name, industry = futures[future]
             try:
-                time.sleep(0.2)  # 延遲 200 毫秒
+                time.sleep(0.5)  # 延遲 500 毫秒
                 match, recommendation_mean, recommendationKey, stock_name, industry = future.result()
                 if match:
                     count += 1
@@ -157,10 +159,11 @@ def main():
     msg = f'發送時間 : {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n'
     msg += '''
 選股策略如下 : 
-1. DMI(+-+)
+1. DI+ > DI-
+2. ADX 紅色
     '''
     msg += f'\n{matched_stocks_str} 共 {count} 檔'
-    # print(msg)
+    print(msg)
 
     # 發送訊息到 LINE Notify
     send_text_message(TARGET_ID, msg)
