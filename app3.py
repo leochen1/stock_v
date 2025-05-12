@@ -12,6 +12,10 @@ from linebot import LineBotApi
 from linebot.models import TextSendMessage
 from linebot.exceptions import LineBotApiError
 
+# 建立忽略 SSL 驗證的 Session
+session = requests.Session()
+session.verify = False
+
 # 替換成你的 Channel access token
 YOUR_CHANNEL_ACCESS_TOKEN = 'aR3GEe7B4hzK58ir/halgz4d58ZArkeXBa5XXK6BBBvIgqkgCq7unGsRK3r1nHK8a9qHQTGynl2QDrcJ+CqAov/iafn6ic9rldDQMkKuRZocElxMRK3wcju7Bp8lEnRo8CHr448jEqZDI97ovWJS4gdB04t89/1O/w1cDnyilFU='
 
@@ -21,7 +25,7 @@ TARGET_ID = 'Ue29e2eb096538c363367923715c6d0da'
 line_bot_api = LineBotApi(YOUR_CHANNEL_ACCESS_TOKEN)
 
 def get_company_info_data(url):
-    res = requests.get(url)
+    res = requests.get(url, verify=False)
     df = pd.read_html(res.text)[0]
     df.columns = df.iloc[0]
     df = df.iloc[1:]
@@ -38,12 +42,28 @@ def get_stock_codes():
         stock_codes = stock_codes_1 + stock_codes_2
         return stock_codes
     except Exception as e:
+        print(str(e))
         return str(e)
 
 def analyze_stock(stock_code, stock_name, industry):
-    df = yf.Ticker(stock_code).history(period = 'max')
-    if df is None or df.empty:
+    try:
+        # df = yf.Ticker(stock_code).history(period='max')
+        
+        ticker = yf.Ticker(stock_code, session=session)
+        # 檢查基本信息
+        info = ticker.info
+        print(f"{stock_code} 的基本信息: {info}")
+
+        df = ticker.history(period='max')
+        print(df)
+
+        if df is None or df.empty:
+            print(f"{stock_code}: 無法獲取數據，可能已退市或代碼無效。")
+            return False, '-', '-', stock_name, industry
+    except Exception as e:
+        print(f"{stock_code}: 發生錯誤 - {e}")
         return False, '-', '-', stock_name, industry
+    
     df_info = yf.Ticker(stock_code).info
     recommendation_mean = df_info.get('recommendationMean', '-')
     recommendationKey = df_info.get('recommendationKey', '-')
@@ -143,7 +163,7 @@ def get_matched_stocks(stock_codes, batch_size=50):
     count = 0
     for i in range(0, len(stock_codes), batch_size):
         batch = stock_codes[i:i + batch_size]
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             futures = {executor.submit(analyze_stock, stock_code, stock_name, industry): (stock_code, stock_name, industry) for stock_code, stock_name, industry in batch}
             for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), ncols=70):
                 stock_code, stock_name, industry = futures[future]
