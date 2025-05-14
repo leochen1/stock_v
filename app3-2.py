@@ -54,11 +54,11 @@ def get_company_info_data(url):
 
 def get_stock_codes():
     try:
-        df1 = get_company_info_data("https://isin.twse.com.tw/isin/class_main.jsp?owncode=&stockname=&isincode=&market=1&issuetype=1&industry_code=&Page=1&chklike=Y")
-        # df2 = get_company_info_data("https://isin.twse.com.tw/isin/class_main.jsp?owncode=&stockname=&isincode=&market=2&issuetype=4&industry_code=&Page=1&chklike=Y")
-        stock_codes_1 = df1.apply(lambda x: (x['有價證券代號'], x['有價證券名稱'], x['產業別']), axis=1).tolist()
-        # stock_codes_2 = df2.apply(lambda x: (x['有價證券代號'], x['有價證券名稱'], x['產業別']), axis=1).tolist()
-        stock_codes = stock_codes_1 # + stock_codes_2
+        # df1 = get_company_info_data("https://isin.twse.com.tw/isin/class_main.jsp?owncode=&stockname=&isincode=&market=1&issuetype=1&industry_code=&Page=1&chklike=Y")
+        df2 = get_company_info_data("https://isin.twse.com.tw/isin/class_main.jsp?owncode=&stockname=&isincode=&market=2&issuetype=4&industry_code=&Page=1&chklike=Y")
+        # stock_codes_1 = df1.apply(lambda x: (x['有價證券代號'], x['有價證券名稱'], x['產業別']), axis=1).tolist()
+        stock_codes_2 = df2.apply(lambda x: (x['有價證券代號'], x['有價證券名稱'], x['產業別']), axis=1).tolist()
+        stock_codes = stock_codes_2 # + stock_codes_2
         print(stock_codes)
         return stock_codes
     except Exception as e:
@@ -315,6 +315,6 @@ def batch_download_history():
 
 if __name__ == "__main__":
     # 第一次請執行 batch_download_history()
-    # batch_download_history()
+    batch_download_history()
     # 下載完畢後，請註解上面一行，改回 main()
-    main()
+    # main()
