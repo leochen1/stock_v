@@ -16,9 +16,10 @@ def fetch_tpex_daily_data(stock_no, date):
         data = response.json()
         print("JSON keys:", data.keys())
         if 'tables' in data and data['tables']:
-            df = pd.DataFrame(data['tables'])
-            df.columns = ['代號', '名稱', '成交股數', '成交金額', '開盤價', '最高價', '最低價', '收盤價', '漲跌', '漲跌價差', '成交筆數']
-            # 修正：去除空白並轉字串再比對
+            table = data['tables'][0]
+            fields = table['fields']
+            rows = table['data']
+            df = pd.DataFrame(rows, columns=fields)
             df['代號'] = df['代號'].astype(str).str.strip()
             stock_no = str(stock_no).strip()
             df = df[df['代號'] == stock_no]
