@@ -271,8 +271,8 @@ def main():
     stock_codes = get_stock_codes()
     matched_stocks, count = get_matched_stocks(stock_codes)
 
-    # 只取股票代號
-    code_list = [code for code, name, industry, recommendation_mean, recommendationKey in matched_stocks]
+    # 只取股票代號並加上 .TW
+    code_list = [f"{code}.TW" for code, name, industry, recommendation_mean, recommendationKey in matched_stocks]
     output_str = "\n".join(code_list)
     print(output_str)
 
