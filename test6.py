@@ -1,3 +1,4 @@
+import time
 import requests
 import pandas as pd
 from datetime import datetime
@@ -35,32 +36,34 @@ def get_stock_codes():
         print(str(e))
         return []
 
-def fetch_tpex_daily_data(stock_no, date):
+def fetch_tpex_daily_data(stock_no, date, max_retry=3, sleep_sec=2):
     date_str = date.strftime("%Y/%m/%d")
     url = f"https://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/stk_quote_result.php?l=zh-tw&d={date_str}&se=EW"
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
-    try:
-        response = requests.get(url, headers=headers, verify=False)
-        response.raise_for_status()
-        data = response.json()
-        if 'tables' in data and data['tables']:
-            table = data['tables'][0]
-            fields = table['fields']
-            rows = table['data']
-            df = pd.DataFrame(rows, columns=fields)
-            df['代號'] = df['代號'].astype(str).str.strip()
-            stock_no = str(stock_no).strip()
-            df = df[df['代號'] == stock_no]
-            if df.empty:
-                return None
-            df['日期'] = date_str
-            return df
-        return None
-    except Exception as e:
-        print(f"爬取股票 {stock_no} 在 {date_str} 資料時發生錯誤: {e}")
-        return None
+    for attempt in range(max_retry):
+        try:
+            response = requests.get(url, headers=headers, verify=False, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            if 'tables' in data and data['tables']:
+                table = data['tables'][0]
+                fields = table['fields']
+                rows = table['data']
+                df = pd.DataFrame(rows, columns=fields)
+                df['代號'] = df['代號'].astype(str).str.strip()
+                stock_no = str(stock_no).strip()
+                df = df[df['代號'] == stock_no]
+                if df.empty:
+                    return None
+                df['日期'] = date.strftime("%Y-%m-%d")  # 確保日期正確加入
+                return df
+            return None
+        except Exception as e:
+            print(f"爬取股票 {stock_no} 在 {date_str} 資料時發生錯誤: {e} (第{attempt+1}次)")
+            time.sleep(sleep_sec)
+    return None
 
 def fetch_and_save_history(stock_no, start_date=datetime(2024, 1, 1)):
     """下載並儲存歷史資料（只需執行一次，或定期更新）"""
@@ -74,6 +77,7 @@ def fetch_and_save_history(stock_no, start_date=datetime(2024, 1, 1)):
         date += pd.Timedelta(days=1)
     if all_data:
         df_all = pd.concat(all_data, ignore_index=True)
+        df_all = df_all.drop_duplicates(subset=['日期'])  # 確保日期唯一
         csv_path = f"{DATA_DIR}/{stock_no}.csv"
         df_all.to_csv(csv_path, index=False, encoding="utf-8-sig")
         print(f"{stock_no} 歷史資料已儲存到 {csv_path}")
@@ -115,7 +119,7 @@ if __name__ == "__main__":
     stock_codes = get_stock_codes()
     # 下載歷史資料（如已下載可註解）
     for code, name, industry in tqdm(stock_codes, desc="下載歷史資料"):
-        fetch_and_save_history(code, start_date=datetime(2024, 1, 1))
+        fetch_and_save_history(code, start_date=datetime(2025, 5, 1))
         # break  # 測試單檔可加 break
     # 補今日資料
     update_history_all(stock_codes)
