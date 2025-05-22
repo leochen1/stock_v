@@ -73,7 +73,7 @@ def append_to_stock_csv(stock_code, row):
 if __name__ == "__main__":
     stock_list = get_stock_codes()
     stock_code_set = set([code for code, name, industry in stock_list])
-    start_date = datetime(2025, 5, 1)
+    start_date = datetime(2013, 5, 25)
     end_date = datetime.today()
     delta = timedelta(days=1)
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"{date_str} 發生錯誤: {e}")
         # 建議加上延遲，避免被官方封鎖
-        time.sleep(2)
+        time.sleep(0.1)
         start_date += delta
 
     print("歷史資料下載完成。")

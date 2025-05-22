@@ -8,3 +8,4 @@ line-bot-sdk
 flask
 twstock
 html5lib
+pyautogui
