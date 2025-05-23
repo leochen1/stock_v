@@ -73,7 +73,7 @@ def append_to_stock_csv(stock_code, row):
 if __name__ == "__main__":
     stock_list = get_stock_codes()
     stock_code_set = set([code for code, name, industry in stock_list])
-    start_date = datetime(2013, 5, 25)
+    start_date = datetime(2023, 3, 1)
     end_date = datetime.today()
     delta = timedelta(days=1)
 
