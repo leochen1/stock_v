@@ -226,8 +226,20 @@ def analyze_stock(stock_code, stock_name, industry):
 def get_matched_stocks(stock_codes, batch_size=50):
     matched_stocks = []
     count = 0
+
+    # 取得已存在的 csv 檔案股票代號清單
+    csv_files = set()
+    for file in os.listdir(DATA_DIR):
+        if file.endswith(".csv"):
+            code = file.split(".")[0]
+            csv_files.add(code)
+
     for i in range(0, len(stock_codes), batch_size):
         batch = stock_codes[i:i + batch_size]
+        # 過濾掉沒有 csv 的股票代號
+        batch = [item for item in batch if item[0] in csv_files]
+        if not batch:
+            continue
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             futures = {executor.submit(analyze_stock, stock_code, stock_name, industry): (stock_code, stock_name, industry) for stock_code, stock_name, industry in batch}
             for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), ncols=70):
@@ -274,7 +286,7 @@ def main():
 
     msg = f'發送時間 : {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n'
     msg += '''
-選股策略如下 : 
+上市選股策略如下 : 
 1. 日,週,月 DI+ > DI-
 2. 日,週,月 ADX 紅色
     '''
