@@ -8,7 +8,9 @@ from collections import defaultdict
 import requests
 
 DATA_DIR = "data/tpex_history"
+OUTPUT_DIR = "otc_output"
 os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def get_company_info_data(url):
     res = requests.get(url, verify=False)
@@ -155,8 +157,12 @@ def main():
     stock_codes = get_stock_codes_from_csv(stock_info_dict)
     matched_stocks, count = get_matched_stocks(stock_codes)
 
+    # 產生今日日期字串
+    today_str = datetime.now().strftime("%Y%m%d")
+    output_filename = os.path.join(OUTPUT_DIR, f"otc_{today_str}.txt")
+
     # 只輸出代號.TW，每行一檔
-    save_txt("otc_matched_stocks.txt", matched_stocks)
+    save_txt(output_filename, matched_stocks)
 
 if __name__ == "__main__":
     main()

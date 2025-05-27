@@ -1,3 +1,6 @@
+import os
+from datetime import datetime
+
 def merge_txt_files(file1, file2, output_file):
     # 讀取第一個檔案內容
     with open(file1, "r", encoding="utf-8") as f1:
@@ -16,12 +19,15 @@ def merge_txt_files(file1, file2, output_file):
 
     print(f"合併完成，輸出檔案為: {output_file}")
 
-
 if __name__ == "__main__":
-    # 定義檔案路徑
-    file1 = "otc_matched_stocks.txt"
-    file2 = "twse_matched_stocks.txt"
-    output_file = "output.txt"
+    today_str = datetime.now().strftime("%Y%m%d")
+    otc_dir = "otc_output"
+    twse_dir = "twse_output"
+    all_dir = "all_output"
+    os.makedirs(all_dir, exist_ok=True)
 
-    # 合併檔案
+    file1 = os.path.join(otc_dir, f"otc_{today_str}.txt")
+    file2 = os.path.join(twse_dir, f"twse_{today_str}.txt")
+    output_file = os.path.join(all_dir, f"all_{today_str}.txt")
+
     merge_txt_files(file1, file2, output_file)

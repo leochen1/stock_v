@@ -288,8 +288,14 @@ def main():
     output_str = "\n".join(code_list)
     print(output_str)
 
-    # 輸出到 output.txt
-    with open("twse_matched_stocks.txt", "w", encoding="utf-8") as f:
+    # 產生今日日期字串
+    today_str = datetime.now().strftime("%Y%m%d")
+    output_dir = "twse_output"
+    os.makedirs(output_dir, exist_ok=True)
+    output_filename = os.path.join(output_dir, f"twse_{today_str}.txt")
+
+    # 輸出到指定資料夾
+    with open(output_filename, "w", encoding="utf-8") as f:
         f.write(output_str)
 
     # 若不想發送 line 訊息可註解掉
