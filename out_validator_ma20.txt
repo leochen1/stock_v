@@ -1,0 +1,1 @@
+Validation Failed: No stocks found above MA20.
